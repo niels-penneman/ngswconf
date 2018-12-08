@@ -1,7 +1,7 @@
 # NETGEAR Switch Configuration Downloader
 
 Downloads the configuration of NETGEAR ProSAFE Smart Managed Pro switches for
-backup purposes.
+backup purposes through the HTTP management interface.
 
 Supported models:
 * GS108Tv2

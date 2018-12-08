@@ -199,6 +199,10 @@ int main(int argc, const char **argv)
   int ret = 0;
   if (curl)
   {
+    /* Log in, get the configuration and then log out. The latter is important
+     * as these switches limit the amount of 'open' HTTP sessions, and it can
+     * take the switch several minutes to automatically close an inactive HTTP
+     * session (depending on the configuration). */
     ret = request_login(model, host, password, curl);
     if (ret == 0)
     {
@@ -206,6 +210,11 @@ int main(int argc, const char **argv)
       request_logout(model, host, curl);
     }
     curl_easy_cleanup(curl);
+
+    /* CURL could print the configuration if we don't configure a custom write
+     * callback for the configuration request. This would however also print
+     * errors. Therefore we first store the configuration in memory and only
+     * when successful, we print the contents of our buffer to STDOUT. */
     ret = ret ? ret : print_config();
   }
   else
