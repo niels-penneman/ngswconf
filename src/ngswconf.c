@@ -56,11 +56,11 @@ size_t curl_store_data(char *ptr, size_t size, size_t nmemb, void *userdata);
 size_t curl_swallow_data(char *ptr, size_t size, size_t nmemb, void *userdata);
 const Model *get_model(const char *name);
 int is_session_id_cookie(const char *cookie, const char **sessionID);
-int print_config(void);
 int request_config(const char *host, CURL *curl);
 int request_login(const Model *model, const char *host, const char *password,
   CURL *curl);
 void request_logout(const Model *model, const char *host, CURL *curl);
+int write_config(FILE *file);
 
 enum
 {
@@ -158,14 +158,16 @@ int main(int argc, const char **argv)
     return 1;
   }
 
-  if (argc != 3)
+  if (argc < 3 || argc > 4)
   {
-    fprintf(stderr, "Usage: %s SWITCH_MODEL HOST_OR_IP\n", argv[0]);
+    fprintf(stderr, "Usage: %s SWITCH_MODEL HOST_OR_IP [OUTFILE]\n", argv[0]);
     return 1;
   }
 
   const Model *model = get_model(argv[1]);
   const char *host = argv[2];
+  const char *outFileName = argc > 3 ? argv[3] : NULL;
+  FILE *outFile = stdout;
 
   if (model == NULL)
   {
@@ -214,7 +216,20 @@ int main(int argc, const char **argv)
      * callback for the configuration request. This would however also print
      * errors. Therefore we first store the configuration in memory and only
      * when successful, we print the contents of our buffer to STDOUT. */
-    ret = ret ? ret : print_config();
+    if (!ret && outFileName)
+    {
+      outFile = fopen(outFileName, "wb");
+      if (outFile == NULL)
+      {
+        perror("Failed to open output file");
+        ret = 1;
+      }
+    }
+    ret = ret ? ret : write_config(outFile);
+    if (outFileName && outFile)
+    {
+      fclose(outFile);
+    }
   }
   else
   {
@@ -224,20 +239,6 @@ int main(int argc, const char **argv)
 
   curl_global_cleanup();
   return ret;
-}
-
-int print_config()
-{
-  if (g_bufferPos > 0)
-  {
-    size_t written = fwrite(g_buffer, 1, g_bufferPos, stdout);
-    if (written != g_bufferPos)
-    {
-      fputs("Failed to print configuration\n", stderr);
-      return 1;
-    }
-  }
-  return 0;
 }
 
 int request_config(const char *host, CURL *curl)
@@ -405,4 +406,18 @@ void request_logout(const Model *model, const char *host, CURL *curl)
   {
     fprintf(stderr, "Failed to log out; HTTP response code: %ld\n", status);
   }
+}
+
+int write_config(FILE *file)
+{
+  if (g_bufferPos > 0)
+  {
+    size_t written = fwrite(g_buffer, 1, g_bufferPos, file);
+    if (written != g_bufferPos)
+    {
+      fputs("Failed to write configuration\n", stderr);
+      return 1;
+    }
+  }
+  return 0;
 }
