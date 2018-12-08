@@ -67,12 +67,13 @@ enum
   BUFFER_SIZE             = 1 << 15 /* 32 kB */,
   COOKIE_FIELDS           = 7,
   COOKIE_TABS             = COOKIE_FIELDS - 1,
+  HTTP_STATUS_OK          = 200,
   HTTP_STATUS_NO_CONTENT  = 204,
-  MAX_host_SIZE           = 32,
+  MAX_HOSTNAME_SIZE       = 32,
   MAX_PASSWORD_SIZE       = 64,
   PASSWORD_BUFFER_SIZE    = MAX_PASSWORD_SIZE + 5,
   SESSION_ID_BUFFER_SIZE  = 86,
-  URL_BUFFER_SIZE         = 34 + MAX_host_SIZE
+  URL_BUFFER_SIZE         = 34 + MAX_HOSTNAME_SIZE
 };
 
 static const Model MODELS[] = {
@@ -125,7 +126,7 @@ int is_session_id_cookie(const char *cookie, const char **sessionID)
   for (int i = 0; i < COOKIE_TABS; ++i)
   {
     const char *const tab = strchr(cookie + (i > 0 ? t[i - 1] + 1 : 0), '\t');
-    if (tab == NULL)
+    if (!tab)
     {
       return 0;
     }
@@ -169,13 +170,13 @@ int main(int argc, const char **argv)
   const char *outFileName = argc > 3 ? argv[3] : NULL;
   FILE *outFile = stdout;
 
-  if (model == NULL)
+  if (!model)
   {
     fprintf(stderr, "Unknown model: %s\n", argv[1]);
     return 1;
   }
 
-  if (strlen(host) > MAX_host_SIZE)
+  if (strlen(host) > MAX_HOSTNAME_SIZE)
   {
     fputs("Host/IP too long\n", stderr);
     return 1;
@@ -219,7 +220,7 @@ int main(int argc, const char **argv)
     if (!ret && outFileName)
     {
       outFile = fopen(outFileName, "wb");
-      if (outFile == NULL)
+      if (!outFile)
       {
         perror("Failed to open output file");
         ret = 1;
@@ -268,7 +269,7 @@ int request_config(const char *host, CURL *curl)
     return 1;
   }
 
-  if (status != 200)
+  if (status != HTTP_STATUS_OK)
   {
     fprintf(stderr,
       "Failed to retrieve configuration; HTTP response code: %ld\n", status);
@@ -313,7 +314,7 @@ int request_login(const Model *model, const char *host, const char *password,
     fprintf(stderr, "Failed to log in: %s\n", curl_easy_strerror(cr));
     return 1;
   }
-  if (status != 200)
+  if (status != HTTP_STATUS_OK)
   {
     fprintf(stderr, "Failed to log in; HTTP response code: %ld\n", status);
     return 1;
