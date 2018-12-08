@@ -30,7 +30,6 @@
 #include <unistd.h>
 
 #include <curl/curl.h>
-#include <libexplain/fwrite.h>
 #include <sys/types.h>
 
 
