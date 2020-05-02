@@ -45,7 +45,7 @@ set (CMAKE_C_FLAGS_DEBUG "-ggdb3 -fsanitize=address,undefined")
 set (CMAKE_C_FLAGS_RELEASE "-DNDEBUG -Os")
 
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wuseless-cast")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
   set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -flto -ffunction-sections -fdata-sections")
   set (CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--gc-sections")
 endif ()
